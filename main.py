@@ -1,5 +1,6 @@
 import pandas as pd
 from decAlgo import DecisionTree
+from random import randint
 
 
 def linear_classification(): 
@@ -59,7 +60,52 @@ def single_decision_tree():
 
     testing_set = saveTestSet('test_final.csv')[1:]
     save_preidictions(d3, testing_set)
+
+def randomized_set(l, size): 
+    result = []
+    for i in range(size): 
+        random_index = randint(0, size-1)
+        result.append(l[random_index])
     
+    return result
+
+
+def boosting_and_bagging(): 
+    training_data = saveDataSet('train_final.csv')[1:]
+    trees = []
+    T = 30
+    max_depth = 3
+    training_size = 200
+    for i, tree in enumerate(range(T)): 
+        random_data = randomized_set(training_data, training_size)
+        d3 = DecisionTree(dataSet=training_data, attributesWithValues=getAttributes(), hasNumerics=True, max_depth=3, replaceMissing=True, measurement="Ent")
+        trees.append(d3)
+        if i % 5 == 0: 
+            print("calculating tree", i)
+
+        
+
+    testing_set = saveTestSet('test_final.csv')[1:]
+    save_bagging_predictions(trees, testing_set)
+    # save_preidictions(d3, testing_set)
+
+def save_bagging_predictions(trees, testing_set): 
+    f = open("submission2.csv", "a")
+    f.write("ID,Prediction\n")
+    for i, test in enumerate(testing_set):
+        f.write(str(i + 1) + "," + str(final_prediction(trees, test)) + "\n")
+    
+    f.close() 
+
+def final_prediction(trees, test):
+    sum = 0
+    for tree in trees: 
+        pred = tree.predict(test)
+        sum += (int(pred) - 1)
+    if sum > 0: 
+        return 1
+    return 0 
+
 
 def save_preidictions(d3, testing_set): 
     f = open("submission1.csv", "a")
@@ -71,6 +117,7 @@ def save_preidictions(d3, testing_set):
 
 
 if __name__ == "__main__":
-    single_decision_tree()
+    # single_decision_tree()
+    boosting_and_bagging()
     # linear_classification()
     # print("Hello, World!")
