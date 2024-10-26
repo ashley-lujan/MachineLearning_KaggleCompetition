@@ -1,7 +1,7 @@
 import pandas as pd
 from decAlgo import DecisionTree
 from random import randint
-
+from sklearn.ensemble import AdaBoostClassifier
 
 def linear_classification(): 
     data = pd.read_csv('train_final.csv')
@@ -11,11 +11,21 @@ def saveDataSet(filename):
     inti = 0
     # with open(filename + '/train.csv', 'r') as f:
     with open(filename, 'r') as f:
-        for line in f:
+        for line in f[1:]:
             terms = line.strip().split(',')
             inti += 1
             result.append(terms)
     return result
+
+def saveXY(filename):
+    X = []
+    y = []
+    with open(filename, 'r') as f:
+        for line in f:
+            terms = line.strip().split(',')
+            X.append(terms[:-1])
+            y.append(terms[-1])
+    return (X, y)
 
 def saveTestSet(filename):
     result = []
@@ -106,18 +116,62 @@ def final_prediction(trees, test):
         return 1
     return 0 
 
+def process(_X): 
+    X = []
+    attributes = getAttributes()
+    for index in range(len(_X)): 
+        _Xi = _X[index]
+        Xi = []
+        for j, key in enumerate(attributes.keys()): 
+            _Xij = _Xi[j]
+            if type(attributes[key]) == list:                
+                Xi.append(attributes[key].index(_Xij))
+            else:
+                Xi.append(_Xij)
+        X.append(Xi)
+    return X
+
+
+
+
+
+
+def adaBoost(): 
+    X, y = saveXY('train_final.csv')
+    X = X[1:]
+    X = process(X)
+    
+    y = y[1:]
+    print(y[:5])
+
+    print("learning")
+    clf = AdaBoostClassifier()
+    clf.fit(X, y)
+
+    print("predicting")
+    testX = saveTestSet('test_final.csv')[1:]
+    testX = process(testX)
+    save_predictions(clf.predict, testX, "submissionAda.csv")
+
+def save_predictions(predictor_func, test_set, output_file): 
+    with open(output_file, "w") as f: 
+        f.write("ID,Prediction\n")
+        for i, test in enumerate(test_set):
+            f.write(str(i + 1) + "," + str(predictor_func([test])[0]) + "\n")
+
+
 
 def save_preidictions(d3, testing_set): 
-    f = open("submission1.csv", "a")
-    f.write("ID,Prediction\n")
-    for i, test in enumerate(testing_set):
-        f.write(str(i + 1) + "," + str(d3.predict(test)) + "\n")
+    with open("submission1.csv", "w") as f:
+        f.write("ID,Prediction\n")
+        for i, test in enumerate(testing_set):
+            f.write(str(i + 1) + "," + str(d3.predict(test)) + "\n")
     
-    f.close()
 
 
 if __name__ == "__main__":
     # single_decision_tree()
-    boosting_and_bagging()
+    # boosting_and_bagging()
     # linear_classification()
     # print("Hello, World!")
+    adaBoost()
