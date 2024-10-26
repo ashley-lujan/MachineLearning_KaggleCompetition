@@ -145,7 +145,7 @@ def adaBoost():
     print(y[:5])
 
     print("learning")
-    clf = AdaBoostClassifier()
+    clf = AdaBoostClassifier(n_estimators = 1000, learning_rate=10, random_state = 10)
     clf.fit(X, y)
 
     print("predicting")
